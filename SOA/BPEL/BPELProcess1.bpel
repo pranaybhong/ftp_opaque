@@ -1,0 +1,65 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer
+
+  Created: Wed Jul 30 12:10:07 IST 2025
+  Author:  DAFIT007
+  Type: BPEL 2.0 Process
+  Purpose: Empty BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="BPELProcess1"
+               targetNamespace="http://xmlns.oracle.com/TASK/Ftp_Opaque/BPELProcess1"
+               xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+               xmlns:client="http://xmlns.oracle.com/TASK/Ftp_Opaque/BPELProcess1"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+               xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:ns1="http://xmlns.oracle.com/pcbpel/adapter/ftp/TASK/Ftp_Opaque/File_Get"
+         xmlns:ns2="http://xmlns.oracle.com/pcbpel/adapter/opaque/" xmlns:ns3="http://TargetNamespace.com/File_Get"
+         xmlns:ui="http://xmlns.oracle.com/soa/designer"
+         xmlns:ns4="http://xmlns.oracle.com/pcbpel/adapter/file/TASK/Ftp_Opaque/File_Write">
+
+  <!--
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC
+     Set of activities coordinating the flow of messages across the
+     services integrated within this business process
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <import namespace="http://TargetNamespace.com/File_Get" location="../Schemas/nxsd_schema1.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <import namespace="http://xmlns.oracle.com/pcbpel/adapter/ftp/TASK/Ftp_Opaque/File_Get"
+          location="../WSDLs/File_Get.wsdl" importType="http://schemas.xmlsoap.org/wsdl/" ui:processWSDL="true"/>
+  <partnerLinks>
+    <partnerLink name="File_Get" partnerLinkType="ns1:Get_plt" myRole="Get_role"/>
+    <partnerLink name="File_Write" partnerLinkType="ns4:Write_plt" partnerRole="Write_role"/>
+  </partnerLinks>
+  <variables>
+    <variable name="Receive_File_Get_Get_InputVariable" messageType="ns1:Get_msg"/>
+    <variable name="Translate1_OutputVar_1" element="ns3:Root"/>
+    <variable name="Invoke_File_Write_Write_InputVariable" messageType="ns4:Write_msg"/>
+  </variables>
+  <sequence name="main">
+    <receive name="Receive_File_Get" partnerLink="File_Get" portType="ns1:Get_ptt" operation="Get"
+             variable="Receive_File_Get_Get_InputVariable" createInstance="yes"/>
+    <assign name="Translate1">
+      <bpelx:annotation>
+        <bpelx:pattern>translate</bpelx:pattern>
+      </bpelx:annotation>
+      <copy>
+        <from>ora:doTranslateFromNative($Receive_File_Get_Get_InputVariable.opaque, 'Schemas/nxsd_schema1.xsd', 'Root', 'DOM')</from>
+        <to>$Translate1_OutputVar_1</to>
+      </copy>
+    </assign>
+    <assign name="Assign1">
+      <copy>
+        <from>$Receive_File_Get_Get_InputVariable.opaque</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$Invoke_File_Write_Write_InputVariable.opaque</to>
+      </copy>
+    </assign>
+    <invoke name="Invoke_File_Write" partnerLink="File_Write" portType="ns4:Write_ptt"
+            operation="Write" inputVariable="Invoke_File_Write_Write_InputVariable" bpelx:invokeAsDetail="no"/>
+  </sequence>
+</process>
